@@ -106,7 +106,7 @@ function Trip() {
               size="small"
               aria-label="a dense table"
             >
-              <TableHead>
+              <TableHead style={{ background: '#26ADE0' }}>
                 <TableRow>
                   <TableHeaderCell>Trip Name</TableHeaderCell>
                   <TableHeaderCell></TableHeaderCell>
