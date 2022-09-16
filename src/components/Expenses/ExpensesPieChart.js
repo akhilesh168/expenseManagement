@@ -7,7 +7,9 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 export function ExpensePieChart({ expenses }) {
   const data = {
-    labels: expenses.map((item) => item.category.value || item.category),
+    labels: expenses?.map(
+      (item) => item?.category?.value || item?.category || ''
+    ),
     datasets: [
       {
         label: '# of Votes',

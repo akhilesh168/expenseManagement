@@ -1,25 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import ExpansesTable from './ExpansesTable';
+import ExpensesTable from './ExpensesTable';
 import { getAllExpenses } from '../../api/api';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Backdrop } from '@mui/material';
+import { toast } from 'react-toastify';
+import { GenericErrorMessage, toastConfig } from '../../utils/constants';
+
 export default function AllExpenses() {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    (async () => {
-      const { data } = await getAllExpenses();
-      setExpenses((prevVal) => [...data.expenses]);
-    })();
+    try {
+      (async () => {
+        setIsLoading(true);
+        const { data } = await getAllExpenses();
+        setExpenses((prevVal) => [...data.expenses]);
+        setIsLoading(false);
+      })();
+    } catch (err) {
+      toast.error(err.message || GenericErrorMessage, toastConfig);
+    }
   }, []);
   return (
     <>
       {isLoading ? (
-        <Box sx={{ display: 'flex' }}>
-          <CircularProgress />
-        </Box>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={isLoading}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
       ) : (
         <Box sx={{ mt: 2, mb: 2 }}>
-          <ExpansesTable expenses={expenses} />
+          <ExpensesTable expenses={expenses} />
         </Box>
       )}
     </>

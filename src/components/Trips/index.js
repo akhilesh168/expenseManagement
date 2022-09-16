@@ -11,11 +11,14 @@ import {
   Paper,
   Box,
   CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import MuiTableHead from '@mui/material/TableHead';
 import { withStyles } from '@mui/styles';
 import AddExpensesForm from '../Expenses/AddExpensesForm';
 import Expenses from '../Expenses';
+import { toast } from 'react-toastify';
+import { GenericErrorMessage, toastConfig } from '../../utils/constants';
 
 const TableHead = withStyles((theme) => ({
   root: {
@@ -28,6 +31,7 @@ const TableHeaderCell = withStyles((theme) => ({
     color: 'white',
   },
 }))(TableCell);
+
 function Trip() {
   const [openTrip, setOpenTrip] = useState(false);
   const [status, setStatus] = useState(false);
@@ -55,13 +59,17 @@ function Trip() {
   const [trips, setTrips] = useState([]);
   useEffect(() => {
     (async () => {
-      setIsLoading(true);
-      const { data } = await getAllTrips();
-      setTrips((prevVal) => [...data.trips]);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const { data } = await getAllTrips();
+        setTrips((prevVal) => [...data.trips]);
+        setIsLoading(false);
+      } catch (err) {
+        toast.error(err.message || GenericErrorMessage, toastConfig);
+      }
     })();
   }, [status]);
-  useEffect(() => {}, [selectedTrip]);
+
   const handleExpensesClose = () => {
     setOpenExpenses(false);
     setSelectedTrip('');
@@ -75,17 +83,27 @@ function Trip() {
     setSelectedTrip(tripId);
   };
 
-  const handleExpensesSubmit = (data) => {
+  const handleExpensesSubmit = async (data) => {
     setOpenExpenses(false);
-    saveExpense(data);
+    const { response } = await saveExpense(data);
+    if (response.status !== 200) {
+      toast.error(
+        response.data.err.message || GenericErrorMessage,
+        toastConfig
+      );
+    }
+    console.log('da', response.status);
     setSelectedTrip('');
   };
   return (
     <>
       {isLoading ? (
-        <Box sx={{ display: 'flex' }}>
-          <CircularProgress />
-        </Box>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={isLoading}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
       ) : (
         <>
           {' '}

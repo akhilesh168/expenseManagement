@@ -9,5 +9,16 @@ const AxiosApi = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
+AxiosApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response.status === 401) {
+      window.location.replace('/login');
+      return;
+    }
+    return error;
+  }
+);
 export default AxiosApi;

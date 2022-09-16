@@ -28,9 +28,17 @@ function AddExpensesForm({
       date: new Date().toISOString(),
     },
   });
+
   const onSubmit = (data) => {
-    handleExpensesSubmit(data);
-    console.log(data);
+    const newObj = {
+      trip: data.trip,
+      amount: data.amount,
+      category: data.category?.value,
+      description: data.description,
+      date: data.date,
+    };
+
+    handleExpensesSubmit(newObj);
     reset();
   };
 
@@ -38,7 +46,7 @@ function AddExpensesForm({
     <Dialog fullWidth maxWidth={'md'} onClose={handleClose} open={openExpenses}>
       <DialogTitle>Add Expenses</DialogTitle>
       <DialogContent>
-        <Container>
+        <Container maxWidth>
           <Box sx={{ mt: 3, mb: 2 }}>
             <form onSubmit={handleSubmit(onSubmit)}>
               <Box sx={{ mt: 3, mb: 2 }}>
@@ -51,6 +59,7 @@ function AddExpensesForm({
                       variant="outlined"
                       size="small"
                       required
+                      type="number"
                     />
                   )}
                   control={control}

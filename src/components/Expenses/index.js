@@ -1,35 +1,16 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { getExpensesById } from '../../api/api';
 import {
-  TableContainer,
-  Table,
   TableCell,
-  TableRow,
-  TableBody,
-  Paper,
-  Box,
   DialogContent,
   DialogTitle,
   Dialog,
   CircularProgress,
+  Backdrop,
 } from '@mui/material';
-import MuiTableHead from '@mui/material/TableHead';
-import { withStyles } from '@mui/styles';
-import { ExpensePieChart } from './ExpensesPieChart';
-import { groupBy } from '../../utils/helper';
-import ExpansesTable from './ExpansesTable';
-
-const TableHead = withStyles((theme) => ({
-  root: {
-    backgroundColor: 'orange',
-  },
-}))(MuiTableHead);
-
-const TableHeaderCell = withStyles((theme) => ({
-  root: {
-    color: 'white',
-  },
-}))(TableCell);
+import ExpensesTable from './ExpensesTable';
+import { toast } from 'react-toastify';
+import { GenericErrorMessage, toastConfig } from '../../utils/constants';
 
 function Expenses({ tripId, handleClose, open }) {
   const [expenses, setExpenses] = useState([]);
@@ -37,18 +18,16 @@ function Expenses({ tripId, handleClose, open }) {
 
   useEffect(() => {
     (async () => {
-      setIsLoading(true);
-      const { data } = await getExpensesById(tripId);
-      setExpenses((prevVal) => [...data.expenses]);
-      setIsLoading(false);
-      return;
-    })();
-    /* else {
-      (async () => {
-        const { data } = await getAllExpenses();
+      try {
+        setIsLoading(true);
+        const { data } = await getExpensesById(tripId);
         setExpenses((prevVal) => [...data.expenses]);
-      })();
-    } */
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        toast.error(err.message || GenericErrorMessage, toastConfig);
+      }
+    })();
   }, [tripId]);
 
   return (
@@ -56,12 +35,15 @@ function Expenses({ tripId, handleClose, open }) {
       <Dialog fullWidth maxWidth={'md'} onClose={handleClose} open={open}>
         <DialogTitle>Expenses</DialogTitle>
         {isLoading ? (
-          <Box sx={{ display: 'flex' }}>
-            <CircularProgress />
-          </Box>
+          <Backdrop
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={isLoading}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
         ) : (
           <DialogContent>
-            <ExpansesTable expenses={expenses} />
+            <ExpensesTable expenses={expenses} />
           </DialogContent>
         )}
       </Dialog>

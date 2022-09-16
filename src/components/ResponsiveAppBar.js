@@ -13,19 +13,32 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { logoutUser } from '../api/api';
+import {
+  useAuthStateContext,
+  useDispatchStateContext,
+} from '../context/Authorization/AuthContext';
+import useLocalStorage from '../hooks/useLocalStorage';
+import { blue, deepPurple } from '@mui/material/colors';
 
 const pages = [
-  { key: 'dashboard', label: 'Dashboard' },
   { key: 'trips', label: 'Trips' },
-  { key: 'expanses', label: 'Expenses' },
+  { key: 'expenses', label: 'Expenses' },
 ];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = [
+  { key: 'profile', label: 'Profile' },
+  { key: 'account', label: 'Account' },
+  { key: 'logout', label: 'Logout' },
+];
 
 const ResponsiveAppBar = () => {
+  const state = useAuthStateContext();
+  const dispatch = useDispatchStateContext();
+  const [value] = useLocalStorage('token', {});
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-
+  const navigate = useNavigate();
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -37,8 +50,17 @@ const ResponsiveAppBar = () => {
     setAnchorElNav(null);
   };
 
-  const handleCloseUserMenu = () => {
+  const handleCloseUserMenu = (pageType) => {
     setAnchorElUser(null);
+    handleClick(pageType);
+  };
+
+  const handleClick = (pageType) => {
+    if (pageType === 'logout') {
+      logoutUser(dispatch);
+      navigate('/login');
+    }
+    return;
   };
 
   return (
@@ -69,7 +91,7 @@ const ResponsiveAppBar = () => {
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
-              aria-label="account of current user"
+              aria-label="account of current userDetails"
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
@@ -95,12 +117,14 @@ const ResponsiveAppBar = () => {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page.key} onClick={handleCloseNavMenu}>
-                  <Link to={`\${page.key}`}></Link>
-                  <Typography textAlign="center">{page.label}</Typography>
-                </MenuItem>
-              ))}
+              {state.token &&
+                state.userDetails &&
+                pages.map((page) => (
+                  <MenuItem key={page.key} onClick={handleCloseNavMenu}>
+                    <Link to={`\${page.key}`}></Link>
+                    <Typography textAlign="center">{page.label}</Typography>
+                  </MenuItem>
+                ))}
             </Menu>
           </Box>
           <AttachMoneyIcon
@@ -125,48 +149,58 @@ const ResponsiveAppBar = () => {
             Expense Manager
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                component={Link}
-                to={`/${page.key}`}
-                key={page.key}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page.label}
-              </Button>
-            ))}
+            {state.token &&
+              state.userDetails &&
+              pages.map((page) => (
+                <Button
+                  component={Link}
+                  to={`/${page.key}`}
+                  key={page.key}
+                  onClick={handleCloseNavMenu}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                >
+                  {page.label}
+                </Button>
+              ))}
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
+          {state.token && state.userDetails && (
+            <Box sx={{ flexGrow: 0 }}>
+              <Tooltip title="Open settings">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Avatar sx={{ bgcolor: blue[500] }}>
+                    {state?.userDetails?.name.split(' ')[0][0]}
+                    {state?.userDetails?.name.split(' ')[1][0]}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                {settings.map((setting) => (
+                  <MenuItem
+                    key={setting.key}
+                    onClick={() => handleCloseUserMenu(setting.key)}
+                  >
+                    <Typography textAlign="center">{setting.label}</Typography>
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Box>
+          )}
         </Toolbar>
       </Container>
     </AppBar>
